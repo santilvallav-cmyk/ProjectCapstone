@@ -724,200 +724,296 @@ function drawPlatforms() {
   }
 }
 
-function drawNPCSprite(ctx, index, cx, cy) {
-  // cy is center — draw character centered on cx, feet at cy+24
+function drawNPCSprite(ctx, index, cx, cy, time) {
   const skin = '#f5c5a3';
   const darkSkin = '#c68642';
-  const x = cx; // center x
-  const top = cy - 28; // top of head
+  const x = cx;
+
+  // shared animation values, each NPC offset by index so they're not synced
+  const offset = index * 1.3;
+  const breathe  = Math.sin(time * 0.0015 + offset) * 1.5;   // slow chest rise
+  const blink    = Math.sin(time * 0.004  + offset);           // blink timing
+  const sway     = Math.sin(time * 0.0012 + offset) * 1.2;    // gentle lean
+  const armSwing = Math.sin(time * 0.0018 + offset) * 3;      // arm idle shift
+  const eyeOpen  = blink > 0.92;                               // eyes closed when true
+
+  const top = cy - 28 + breathe; // whole body breathes up/down slightly
 
   ctx.save();
 
   if (index === 0) {
-    // Tyler Durden — red leather jacket, blonde messy hair, bruised look
-    // legs
+    // Tyler Durden
     ctx.fillStyle = '#333'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
-    // jacket body
     ctx.fillStyle = '#c0392b'; ctx.fillRect(x-10, top+22, 20, 20);
-    // collar/lapels
     ctx.fillStyle = '#922b21'; ctx.fillRect(x-4, top+22, 4, 10); ctx.fillRect(x, top+22, 4, 10);
-    // arms
-    ctx.fillStyle = '#c0392b'; ctx.fillRect(x-14, top+23, 5, 14); ctx.fillRect(x+9, top+23, 5, 14);
-    // hands
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+37, 5, 5); ctx.fillRect(x+9, top+37, 5, 5);
-    // head
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // hair — messy blonde
+    // arms sway slightly
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(x-14, top+23+armSwing, 5, 14);
+    ctx.fillRect(x+9,  top+23-armSwing, 5, 14);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14, top+37+armSwing, 5, 5);
+    ctx.fillRect(x+9,  top+37-armSwing, 5, 5);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x + sway*0.4, top+13, 11, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#d4ac0d';
-    ctx.fillRect(x-11, top+2, 22, 8);
-    ctx.fillRect(x-13, top+6, 5, 6); ctx.fillRect(x+8, top+4, 5, 8);
-    // eyes
-    ctx.fillStyle = '#222'; ctx.fillRect(x-6, top+11, 3, 3); ctx.fillRect(x+3, top+11, 3, 3);
-    // stubble
+    ctx.fillRect(x-11+sway*0.4, top+2, 22, 8);
+    ctx.fillRect(x-13+sway*0.4, top+6, 5, 6); ctx.fillRect(x+8+sway*0.4, top+4, 5, 8);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#222'; ctx.fillRect(x-6+sway*0.4, top+11, 3, 3); ctx.fillRect(x+3+sway*0.4, top+11, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-6+sway*0.4, top+11, 3, 2);
+      ctx.fillStyle = '#222'; ctx.fillRect(x-6+sway*0.4, top+13, 3, 1); ctx.fillRect(x+3+sway*0.4, top+13, 3, 1);
+    }
     ctx.fillStyle = '#c68642'; ctx.fillRect(x-5, top+18, 10, 3);
   }
 
   else if (index === 1) {
-    // Thom Yorke — dark clothes, distinctive droopy left eye
+    // Thom Yorke
     ctx.fillStyle = '#555'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
     ctx.fillStyle = '#2c2c2c'; ctx.fillRect(x-10, top+22, 20, 20);
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x-14, top+23, 5, 14); ctx.fillRect(x+9, top+23, 5, 14);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+37, 5, 5); ctx.fillRect(x+9, top+37, 5, 5);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // brown hair
-    ctx.fillStyle = '#5d3a1a'; ctx.fillRect(x-11, top+2, 22, 9); ctx.fillRect(x-13, top+5, 4, 7);
-    // lazy left eye (droops lower)
-    ctx.fillStyle = '#222'; ctx.fillRect(x-6, top+11, 3, 4); ctx.fillRect(x+3, top+10, 3, 3);
-    // eyelid droop
-    ctx.fillStyle = skin; ctx.fillRect(x-6, top+11, 3, 2);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x-14, top+23+armSwing, 5, 14);
+    ctx.fillRect(x+9,  top+23-armSwing, 5, 14);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14, top+37+armSwing, 5, 5);
+    ctx.fillRect(x+9,  top+37-armSwing, 5, 5);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+sway*0.3, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5d3a1a'; ctx.fillRect(x-11+sway*0.3, top+2, 22, 9); ctx.fillRect(x-13+sway*0.3, top+5, 4, 7);
+    // droopy left eye always half closed, right blinks normally
+    ctx.fillStyle = '#222'; ctx.fillRect(x-6+sway*0.3, top+12, 3, 3);
+    ctx.fillStyle = skin;  ctx.fillRect(x-6+sway*0.3, top+11, 3, 2);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#222'; ctx.fillRect(x+3+sway*0.3, top+10, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x+3+sway*0.3, top+10, 3, 1);
+      ctx.fillStyle = '#222'; ctx.fillRect(x+3+sway*0.3, top+12, 3, 1);
+    }
   }
 
   else if (index === 2) {
-    // Ralph — torn shirt, disheveled, island-stranded look
+    // Ralph — looks around nervously (head sways more)
     ctx.fillStyle = '#5d6d7e'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
     ctx.fillStyle = '#aab7b8'; ctx.fillRect(x-10, top+22, 20, 20);
-    // torn edges on shirt
     ctx.fillStyle = '#0a0a1a'; ctx.fillRect(x-10, top+38, 4, 4); ctx.fillRect(x+6, top+38, 4, 4);
-    ctx.fillStyle = '#aab7b8'; ctx.fillRect(x-14, top+23, 5, 12); ctx.fillRect(x+9, top+23, 5, 12);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+35, 5, 5); ctx.fillRect(x+9, top+35, 5, 5);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // dirty blonde hair, messy
-    ctx.fillStyle = '#c8a84b'; ctx.fillRect(x-11, top+2, 22, 8);
-    ctx.fillRect(x+7, top+6, 5, 9); ctx.fillRect(x-12, top+4, 4, 8);
-    ctx.fillStyle = '#222'; ctx.fillRect(x-5, top+11, 3, 3); ctx.fillRect(x+2, top+11, 3, 3);
-    // dirt mark
-    ctx.fillStyle = '#7d6608'; ctx.fillRect(x+2, top+17, 4, 2);
+    // one arm raised slightly like he's shielding his eyes looking into distance
+    ctx.fillStyle = '#aab7b8';
+    ctx.fillRect(x-14, top+23, 5, 12);
+    ctx.fillRect(x+9,  top+23+armSwing*2, 5, 12);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14, top+35, 5, 5);
+    ctx.fillRect(x+9,  top+35+armSwing*2, 5, 5);
+    const headSway = sway * 1.5;
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+headSway, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#c8a84b';
+    ctx.fillRect(x-11+headSway, top+2, 22, 8);
+    ctx.fillRect(x+7+headSway,  top+6, 5, 9); ctx.fillRect(x-12+headSway, top+4, 4, 8);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#222'; ctx.fillRect(x-5+headSway, top+11, 3, 3); ctx.fillRect(x+2+headSway, top+11, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5+headSway, top+11, 3, 1); ctx.fillRect(x+2+headSway, top+11, 3, 1);
+      ctx.fillStyle = '#222'; ctx.fillRect(x-5+headSway, top+13, 3, 1); ctx.fillRect(x+2+headSway, top+13, 3, 1);
+    }
+    ctx.fillStyle = '#7d6608'; ctx.fillRect(x+2+headSway, top+17, 4, 2);
   }
 
   else if (index === 3) {
-    // Anakin — dark Jedi robes, hood down, scar on face
+    // Anakin — cape billows, fist clenches
     ctx.fillStyle = '#1c1c1c'; ctx.fillRect(x-9, top+40, 8, 14); ctx.fillRect(x+1, top+40, 8, 14);
     ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x-11, top+20, 22, 22);
-    // robe overlay / cape
-    ctx.fillStyle = '#111'; ctx.fillRect(x-13, top+22, 4, 20); ctx.fillRect(x+9, top+22, 4, 20);
-    ctx.fillStyle = '#111'; ctx.fillRect(x-13, top+38, 26, 4);
-    ctx.fillStyle = darkSkin; ctx.fillRect(x-14, top+24, 4, 10); ctx.fillRect(x+10, top+24, 4, 10);
-    ctx.fillStyle = '#1c1c1c'; ctx.fillRect(x-14, top+34, 4, 5); ctx.fillRect(x+10, top+34, 4, 5);
-    ctx.fillStyle = darkSkin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // dark hair
-    ctx.fillStyle = '#2c1a00'; ctx.fillRect(x-11, top+2, 22, 10);
-    ctx.fillRect(x-13, top+6, 4, 8);
-    ctx.fillStyle = '#111'; ctx.fillRect(x-5, top+10, 3, 4); ctx.fillRect(x+2, top+10, 3, 4);
-    // scar
-    ctx.fillStyle = '#8b0000'; ctx.fillRect(x+3, top+8, 2, 8);
+    // cape sways
+    ctx.fillStyle = '#111';
+    ctx.fillRect(x-13+sway, top+22, 4, 20);
+    ctx.fillRect(x+9+sway,  top+22, 4, 20);
+    ctx.fillRect(x-13+sway, top+38, 26, 4);
+    // one arm raised (dramatic), one down
+    ctx.fillStyle = darkSkin;
+    ctx.fillRect(x-14, top+24+armSwing, 4, 10);
+    ctx.fillRect(x+10, top+24-armSwing*1.5, 4, 10);
+    ctx.fillStyle = '#1c1c1c';
+    ctx.fillRect(x-14, top+34+armSwing, 4, 5);
+    ctx.fillRect(x+10, top+34-armSwing*1.5, 4, 5);
+    ctx.fillStyle = darkSkin; ctx.beginPath(); ctx.arc(x+sway*0.3, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2c1a00';
+    ctx.fillRect(x-11+sway*0.3, top+2, 22, 10);
+    ctx.fillRect(x-13+sway*0.3, top+6, 4, 8);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#111'; ctx.fillRect(x-5+sway*0.3, top+10, 3, 4); ctx.fillRect(x+2+sway*0.3, top+10, 3, 4);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5+sway*0.3, top+10, 3, 1); ctx.fillRect(x+2+sway*0.3, top+10, 3, 1);
+      ctx.fillStyle = '#111'; ctx.fillRect(x-5+sway*0.3, top+12, 3, 2); ctx.fillRect(x+2+sway*0.3, top+12, 3, 2);
+    }
+    ctx.fillStyle = '#8b0000'; ctx.fillRect(x+3+sway*0.3, top+8, 2, 8);
   }
 
   else if (index === 4) {
-    // Oedipus — white toga, crown/laurel, older
+    // Oedipus — gestures slowly like he's speaking
     ctx.fillStyle = '#e8e8e8'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
     ctx.fillStyle = '#f0f0f0'; ctx.fillRect(x-11, top+20, 22, 22);
-    // toga drape
     ctx.fillStyle = '#dcdcdc'; ctx.fillRect(x+2, top+20, 9, 22);
-    ctx.fillStyle = '#e0e0e0'; ctx.fillRect(x-14, top+23, 4, 18); ctx.fillRect(x+10, top+23, 4, 10);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+41, 4, 4);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // white/grey hair
-    ctx.fillStyle = '#bdc3c7'; ctx.fillRect(x-11, top+3, 22, 8);
-    ctx.fillRect(x-13, top+5, 4, 10);
-    // laurel wreath
-    ctx.fillStyle = '#27ae60'; ctx.fillRect(x-11, top+2, 22, 4);
-    ctx.fillRect(x-12, top+4, 3, 3); ctx.fillRect(x+9, top+4, 3, 3); ctx.fillRect(x-1, top+0, 3, 3);
-    ctx.fillStyle = '#555'; ctx.fillRect(x-5, top+12, 3, 3); ctx.fillRect(x+2, top+12, 3, 3);
-    // beard
+    // one arm gestures outward slowly
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(x-14+armSwing, top+23, 4, 18);
+    ctx.fillRect(x+10, top+23, 4, 10);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14+armSwing, top+41, 4, 4);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+sway*0.2, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#bdc3c7';
+    ctx.fillRect(x-11+sway*0.2, top+3, 22, 8);
+    ctx.fillRect(x-13+sway*0.2, top+5, 4, 10);
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(x-11+sway*0.2, top+2, 22, 4);
+    ctx.fillRect(x-12+sway*0.2, top+4, 3, 3); ctx.fillRect(x+9+sway*0.2, top+4, 3, 3); ctx.fillRect(x-1+sway*0.2, top+0, 3, 3);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#555'; ctx.fillRect(x-5+sway*0.2, top+12, 3, 3); ctx.fillRect(x+2+sway*0.2, top+12, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5+sway*0.2, top+12, 3, 1); ctx.fillRect(x+2+sway*0.2, top+12, 3, 1);
+      ctx.fillStyle = '#555'; ctx.fillRect(x-5+sway*0.2, top+13, 3, 2); ctx.fillRect(x+2+sway*0.2, top+13, 3, 2);
+    }
     ctx.fillStyle = '#bdc3c7'; ctx.fillRect(x-5, top+19, 10, 5);
   }
 
   else if (index === 5) {
-    // High and Dry stranger — plain ordinary clothes, dejected posture
+    // High and Dry stranger — slumped shoulders, slow head drop
+    const slump = Math.abs(Math.sin(time * 0.001 + offset)) * 3; // shoulders drop and rise
     ctx.fillStyle = '#7f8c8d'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
-    ctx.fillStyle = '#3498db'; ctx.fillRect(x-10, top+22, 20, 20);
-    ctx.fillStyle = '#2980b9'; ctx.fillRect(x-14, top+23, 5, 14); ctx.fillRect(x+9, top+23, 5, 14);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+37, 5, 5); ctx.fillRect(x+9, top+37, 5, 5);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#6c3483'; ctx.fillRect(x-11, top+2, 22, 8); ctx.fillRect(x-13, top+5, 4, 6);
-    ctx.fillStyle = '#222'; ctx.fillRect(x-5, top+11, 3, 3); ctx.fillRect(x+2, top+11, 3, 3);
-    // sad mouth
-    ctx.fillStyle = '#c0392b'; ctx.fillRect(x-4, top+19, 8, 2);
-    ctx.fillRect(x-5, top+18, 2, 2); ctx.fillRect(x+3, top+18, 2, 2);
+    ctx.fillStyle = '#3498db'; ctx.fillRect(x-10, top+22+slump*0.3, 20, 20);
+    // arms hang low when slumped
+    ctx.fillStyle = '#2980b9';
+    ctx.fillRect(x-14, top+23+slump, 5, 14);
+    ctx.fillRect(x+9,  top+23+slump, 5, 14);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14, top+37+slump, 5, 5);
+    ctx.fillRect(x+9,  top+37+slump, 5, 5);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13+slump*0.4, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#6c3483';
+    ctx.fillRect(x-11, top+2+slump*0.4, 22, 8);
+    ctx.fillRect(x-13, top+5+slump*0.4, 4, 6);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#222'; ctx.fillRect(x-5, top+11+slump*0.4, 3, 3); ctx.fillRect(x+2, top+11+slump*0.4, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5, top+11+slump*0.4, 3, 1); ctx.fillRect(x+2, top+11+slump*0.4, 3, 1);
+      ctx.fillStyle = '#222'; ctx.fillRect(x-5, top+13+slump*0.4, 3, 1); ctx.fillRect(x+2, top+13+slump*0.4, 3, 1);
+    }
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(x-4, top+19+slump*0.4, 8, 2);
+    ctx.fillRect(x-5, top+18+slump*0.4, 2, 2); ctx.fillRect(x+3, top+18+slump*0.4, 2, 2);
   }
 
   else if (index === 6) {
-    // Bruce Wayne — dark suit and tie, sharp
+    // Bruce Wayne — arms crossed, shifts weight
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(x-10, top+22, 20, 20);
-    // white shirt under
     ctx.fillStyle = '#ecf0f1'; ctx.fillRect(x-4, top+22, 8, 20);
-    // tie
     ctx.fillStyle = '#c0392b'; ctx.fillRect(x-2, top+24, 4, 14);
-    // jacket lapels
     ctx.fillStyle = '#111'; ctx.fillRect(x-10, top+22, 6, 12); ctx.fillRect(x+4, top+22, 6, 12);
-    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(x-14, top+23, 5, 16); ctx.fillRect(x+9, top+23, 5, 16);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+39, 5, 5); ctx.fillRect(x+9, top+39, 5, 5);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x-11, top+2, 22, 9); ctx.fillRect(x-13, top+5, 4, 7);
-    ctx.fillStyle = '#111'; ctx.fillRect(x-5, top+10, 3, 4); ctx.fillRect(x+2, top+10, 3, 4);
-    // strong jaw
+    // arms crossed — both move together with sway
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(x-14+sway*0.5, top+23, 5, 16);
+    ctx.fillRect(x+9+sway*0.5,  top+23, 5, 16);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14+sway*0.5, top+39, 5, 5);
+    ctx.fillRect(x+9+sway*0.5,  top+39, 5, 5);
+    // crossed arm overlay
+    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(x-9, top+30, 18, 5);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+sway*0.3, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x-11+sway*0.3, top+2, 22, 9);
+    ctx.fillRect(x-13+sway*0.3, top+5, 4, 7);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#111'; ctx.fillRect(x-5+sway*0.3, top+10, 3, 4); ctx.fillRect(x+2+sway*0.3, top+10, 3, 4);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5+sway*0.3, top+10, 3, 1); ctx.fillRect(x+2+sway*0.3, top+10, 3, 1);
+      ctx.fillStyle = '#111'; ctx.fillRect(x-5+sway*0.3, top+12, 3, 3); ctx.fillRect(x+2+sway*0.3, top+12, 3, 3);
+    }
     ctx.fillStyle = skin; ctx.fillRect(x-8, top+18, 16, 5);
   }
 
   else if (index === 7) {
-    // Fake Plastic Trees girl — colorful dress, long hair
-    ctx.fillStyle = '#e91e8c'; ctx.fillRect(x-10, top+36, 20, 18);
-    // dress flare
-    ctx.fillStyle = '#f06292'; ctx.fillRect(x-13, top+44, 26, 10);
-    ctx.fillStyle = '#e91e8c'; ctx.fillRect(x-14, top+23, 5, 14); ctx.fillRect(x+9, top+23, 5, 14);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+37, 5, 5); ctx.fillRect(x+9, top+37, 5, 5);
-    // torso
+    // Fake Plastic Trees girl — dress sways, hair flows
+    const dressWave = Math.sin(time * 0.0014 + offset) * 2;
+    ctx.fillStyle = '#e91e8c'; ctx.fillRect(x-10+dressWave, top+36, 20, 18);
+    ctx.fillStyle = '#f06292'; ctx.fillRect(x-13+dressWave, top+44, 26, 10);
+    // arms drift with dress sway
+    ctx.fillStyle = '#e91e8c';
+    ctx.fillRect(x-14, top+23+armSwing, 5, 14);
+    ctx.fillRect(x+9,  top+23-armSwing, 5, 14);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14, top+37+armSwing, 5, 5);
+    ctx.fillRect(x+9,  top+37-armSwing, 5, 5);
     ctx.fillStyle = '#ad1457'; ctx.fillRect(x-10, top+22, 20, 16);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // long brown hair
-    ctx.fillStyle = '#6d4c41'; ctx.fillRect(x-11, top+2, 22, 10);
-    ctx.fillRect(x-13, top+5, 4, 30); ctx.fillRect(x+9, top+5, 4, 25);
-    ctx.fillStyle = '#222'; ctx.fillRect(x-5, top+11, 3, 3); ctx.fillRect(x+2, top+11, 3, 3);
-    // small smile
-    ctx.fillStyle = '#c0392b'; ctx.fillRect(x-3, top+18, 6, 2);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+sway*0.3, top+13, 11, 0, Math.PI*2); ctx.fill();
+    // hair flows with sway
+    ctx.fillStyle = '#6d4c41';
+    ctx.fillRect(x-11+sway*0.3, top+2, 22, 10);
+    ctx.fillRect(x-13+sway*0.5, top+5, 4, 30);
+    ctx.fillRect(x+9+sway*0.5,  top+5, 4, 25);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#222'; ctx.fillRect(x-5+sway*0.3, top+11, 3, 3); ctx.fillRect(x+2+sway*0.3, top+11, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5+sway*0.3, top+11, 3, 1); ctx.fillRect(x+2+sway*0.3, top+11, 3, 1);
+      ctx.fillStyle = '#222'; ctx.fillRect(x-5+sway*0.3, top+12, 3, 2); ctx.fillRect(x+2+sway*0.3, top+12, 3, 2);
+    }
+    ctx.fillStyle = '#c0392b'; ctx.fillRect(x-3+sway*0.3, top+18, 6, 2);
   }
 
   else if (index === 8) {
-    // Dr. Zimbardo — white lab coat, glasses
+    // Dr. Zimbardo — writes on clipboard with arm animation
     ctx.fillStyle = '#555'; ctx.fillRect(x-8, top+40, 7, 14); ctx.fillRect(x+1, top+40, 7, 14);
     ctx.fillStyle = '#fdfefe'; ctx.fillRect(x-11, top+20, 22, 22);
-    // coat buttons
     ctx.fillStyle = '#aaa'; ctx.fillRect(x-1, top+24, 2, 2); ctx.fillRect(x-1, top+30, 2, 2); ctx.fillRect(x-1, top+36, 2, 2);
-    ctx.fillStyle = '#fdfefe'; ctx.fillRect(x-15, top+22, 5, 18); ctx.fillRect(x+10, top+22, 5, 18);
-    ctx.fillStyle = skin; ctx.fillRect(x-15, top+40, 5, 5); ctx.fillRect(x+10, top+40, 5, 5);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // grey hair
-    ctx.fillStyle = '#95a5a6'; ctx.fillRect(x-11, top+3, 22, 8); ctx.fillRect(x-13, top+6, 4, 7);
-    ctx.fillStyle = '#222'; ctx.fillRect(x-6, top+11, 3, 3); ctx.fillRect(x+3, top+11, 3, 3);
-    // glasses frames
+    // left arm stable, right arm writes on clipboard (bobs up/down)
+    ctx.fillStyle = '#fdfefe';
+    ctx.fillRect(x-15, top+22, 5, 18);
+    ctx.fillRect(x+10, top+22+armSwing, 5, 18);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-15, top+40, 5, 5);
+    ctx.fillRect(x+10, top+40+armSwing, 5, 5);
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+sway*0.2, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#95a5a6';
+    ctx.fillRect(x-11+sway*0.2, top+3, 22, 8);
+    ctx.fillRect(x-13+sway*0.2, top+6, 4, 7);
+    // glasses don't blink — he's always observing
+    ctx.fillStyle = '#222'; ctx.fillRect(x-6+sway*0.2, top+11, 3, 3); ctx.fillRect(x+3+sway*0.2, top+11, 3, 3);
     ctx.strokeStyle = '#555'; ctx.lineWidth = 1.5;
-    ctx.strokeRect(x-8, top+9, 6, 5); ctx.strokeRect(x+2, top+9, 6, 5);
-    ctx.beginPath(); ctx.moveTo(x-2, top+12); ctx.lineTo(x+2, top+12); ctx.stroke();
-    // clipboard
-    ctx.fillStyle = '#f0d9a0'; ctx.fillRect(x+10, top+28, 8, 10);
-    ctx.fillStyle = '#555'; ctx.fillRect(x+11, top+30, 6, 1); ctx.fillRect(x+11, top+32, 6, 1); ctx.fillRect(x+11, top+34, 4, 1);
+    ctx.strokeRect(x-8+sway*0.2, top+9, 6, 5); ctx.strokeRect(x+2+sway*0.2, top+9, 6, 5);
+    ctx.beginPath(); ctx.moveTo(x-2+sway*0.2, top+12); ctx.lineTo(x+2+sway*0.2, top+12); ctx.stroke();
+    // clipboard moves with arm
+    ctx.fillStyle = '#f0d9a0'; ctx.fillRect(x+10, top+28+armSwing, 8, 10);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(x+11, top+30+armSwing, 6, 1);
+    ctx.fillRect(x+11, top+32+armSwing, 6, 1);
+    ctx.fillRect(x+11, top+34+armSwing, 4, 1);
   }
 
   else if (index === 9) {
-    // Juliet — renaissance dress, long dark hair, holding a flower
-    ctx.fillStyle = '#7d3c98'; ctx.fillRect(x-10, top+36, 20, 18);
-    ctx.fillStyle = '#9b59b6'; ctx.fillRect(x-13, top+44, 26, 10);
-    ctx.fillStyle = '#7d3c98'; ctx.fillRect(x-14, top+23, 5, 14); ctx.fillRect(x+9, top+23, 5, 14);
-    ctx.fillStyle = skin; ctx.fillRect(x-14, top+37, 5, 5); ctx.fillRect(x+9, top+37, 5, 5);
+    // Juliet — raises rose slowly, dress sways
+    const roseRaise = Math.sin(time * 0.001 + offset) * 5;
+    const dressWave = Math.sin(time * 0.0013 + offset) * 1.5;
+    ctx.fillStyle = '#7d3c98'; ctx.fillRect(x-10+dressWave, top+36, 20, 18);
+    ctx.fillStyle = '#9b59b6'; ctx.fillRect(x-13+dressWave, top+44, 26, 10);
+    // left arm hangs, right arm raises rose
+    ctx.fillStyle = '#7d3c98';
+    ctx.fillRect(x-14, top+23, 5, 14);
+    ctx.fillRect(x+9,  top+23-roseRaise, 5, 14);
+    ctx.fillStyle = skin;
+    ctx.fillRect(x-14, top+37, 5, 5);
+    ctx.fillRect(x+9,  top+37-roseRaise, 5, 5);
     ctx.fillStyle = '#6c3483'; ctx.fillRect(x-10, top+22, 20, 16);
-    // white collar
     ctx.fillStyle = '#fdfefe'; ctx.fillRect(x-7, top+22, 14, 5);
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x, top+13, 11, 0, Math.PI*2); ctx.fill();
-    // long dark hair
-    ctx.fillStyle = '#1a0a00'; ctx.fillRect(x-11, top+2, 22, 10);
-    ctx.fillRect(x-13, top+5, 4, 32); ctx.fillRect(x+9, top+5, 4, 28);
-    ctx.fillStyle = '#111'; ctx.fillRect(x-5, top+11, 3, 3); ctx.fillRect(x+2, top+11, 3, 3);
-    // small sad expression
-    ctx.fillStyle = '#c0392b'; ctx.fillRect(x-3, top+18, 6, 2);
-    // rose in hand
-    ctx.fillStyle = '#27ae60'; ctx.fillRect(x+9, top+32, 2, 12);
-    ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(x+10, top+31, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(x+sway*0.2, top+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a0a00';
+    ctx.fillRect(x-11+sway*0.2, top+2, 22, 10);
+    ctx.fillRect(x-13+sway*0.3, top+5, 4, 32);
+    ctx.fillRect(x+9+sway*0.3,  top+5, 4, 28);
+    if (!eyeOpen) {
+      ctx.fillStyle = '#111'; ctx.fillRect(x-5+sway*0.2, top+11, 3, 3); ctx.fillRect(x+2+sway*0.2, top+11, 3, 3);
+    } else {
+      ctx.fillStyle = skin; ctx.fillRect(x-5+sway*0.2, top+11, 3, 1); ctx.fillRect(x+2+sway*0.2, top+11, 3, 1);
+      ctx.fillStyle = '#111'; ctx.fillRect(x-5+sway*0.2, top+12, 3, 2); ctx.fillRect(x+2+sway*0.2, top+12, 3, 2);
+    }
+    ctx.fillStyle = '#c0392b'; ctx.fillRect(x-3+sway*0.2, top+18, 6, 2);
+    // rose rises and falls
+    ctx.fillStyle = '#27ae60'; ctx.fillRect(x+10, top+32-roseRaise, 2, 10);
+    ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(x+11, top+31-roseRaise, 4, 0, Math.PI*2); ctx.fill();
   }
 
   ctx.restore();
@@ -953,7 +1049,7 @@ function drawNPCs(time) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const bobY = ny + Math.sin(time * 0.002 + npc.x * 0.02) * 4;
-    drawNPCSprite(ctx, level.npcs.indexOf(npc), nx, bobY);
+    drawNPCSprite(ctx, level.npcs.indexOf(npc), nx, bobY, time);
 
     // Name label
     ctx.font = 'bold 11px Courier New';
