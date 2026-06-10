@@ -513,6 +513,9 @@ function initGame() {
 
 function restartGame() {
   document.getElementById('win-screen').style.display = 'none';
+  document.getElementById('game-wrapper').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+  cancelAnimationFrame(animFrame);
   initGame();
 }
 
