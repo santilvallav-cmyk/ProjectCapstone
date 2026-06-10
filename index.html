@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connection Quest — Capstone</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    #title-screen {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #0d0d2b 0%, #1a1a4e 50%, #0d0d2b 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      gap: 24px;
+    }
+
+    #title-screen h1 {
+      font-size: 52px;
+      color: #ffe066;
+      text-shadow: 0 0 20px #ffe066, 0 0 40px #ffaa00;
+      letter-spacing: 4px;
+      text-align: center;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    #title-screen .subtitle {
+      font-size: 18px;
+      color: #aad4ff;
+      text-align: center;
+      max-width: 500px;
+      line-height: 1.6;
+    }
+
+    #title-screen .question {
+      font-size: 20px;
+      color: #ffffff;
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.7;
+      font-style: italic;
+      border: 2px solid #ffe066;
+      padding: 18px 28px;
+      border-radius: 8px;
+      background: rgba(255,224,102,0.07);
+    }
+
+    #start-btn {
+      margin-top: 10px;
+      padding: 16px 48px;
+      font-size: 22px;
+      font-family: 'Courier New', monospace;
+      background: #ffe066;
+      color: #0a0a1a;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 2px;
+      box-shadow: 0 0 20px #ffe06688;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #start-btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 32px #ffe066cc;
+    }
+
+    .controls-hint {
+      font-size: 13px;
+      color: #667799;
+      text-align: center;
+    }
+
+    @keyframes pulse {
+      0%, 100% { text-shadow: 0 0 20px #ffe066, 0 0 40px #ffaa00; }
+      50% { text-shadow: 0 0 30px #ffe066, 0 0 60px #ffaa00, 0 0 80px #ff8800; }
+    }
+
+    #game-wrapper {
+      position: relative;
+      display: none;
+    }
+
+    canvas {
+      display: block;
+      border: 2px solid #334;
+      border-radius: 4px;
+    }
+
+    #hud {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      background: rgba(0,0,0,0.75);
+      border: 2px solid #ffe066;
+      border-radius: 8px;
+      padding: 8px 18px;
+      color: #ffe066;
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #controls-display {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid #334;
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: #778899;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 10;
+      line-height: 1.7;
+    }
+
+    #dialogue-box {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(8, 8, 24, 0.97);
+      border-top: 3px solid #ffe066;
+      padding: 20px 28px 22px;
+      display: none;
+      z-index: 20;
+      min-height: 160px;
+    }
+
+    #dialogue-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    #dialogue-portrait {
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    #dialogue-name {
+      font-size: 20px;
+      color: #ffe066;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    #dialogue-source {
+      font-size: 11px;
+      color: #667799;
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    #dialogue-text {
+      font-size: 16px;
+      color: #e8e8f0;
+      line-height: 1.7;
+      min-height: 60px;
+    }
+
+    #dialogue-continue {
+      text-align: right;
+      color: #ffe066;
+      font-size: 13px;
+      margin-top: 10px;
+      animation: blink 1s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    #win-screen {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #0d2b0d 0%, #1a4e1a 50%, #0d2b0d 100%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      gap: 20px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    #win-screen h2 {
+      font-size: 42px;
+      color: #66ff88;
+      text-shadow: 0 0 20px #44ff66;
+      letter-spacing: 3px;
+    }
+
+    #win-screen p {
+      font-size: 18px;
+      color: #aaffcc;
+      max-width: 560px;
+      line-height: 1.8;
+    }
+
+    #win-screen .thesis {
+      font-style: italic;
+      border: 2px solid #66ff88;
+      padding: 16px 24px;
+      border-radius: 8px;
+      background: rgba(102,255,136,0.07);
+      color: #ffffff;
+      font-size: 17px;
+    }
+
+    #restart-btn {
+      padding: 12px 36px;
+      font-size: 18px;
+      font-family: 'Courier New', monospace;
+      background: #66ff88;
+      color: #0a1a0a;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="title-screen">
+  <h1>CONNECTION QUEST</h1>
+  <div class="question">
+    "How do stories shape the way we understand ourselves and the world around us?"
+  </div>
+  <div class="subtitle">
+    Jump between worlds. Talk to 10 guides. Collect every connection.
+  </div>
+  <button id="start-btn" onclick="startGame()">▶ START</button>
+  <div class="controls-hint">
+    WASD / Arrow Keys to move &nbsp;|&nbsp; E to talk &nbsp;|&nbsp; Space / W / ↑ to jump
+  </div>
+</div>
+
+<div id="game-wrapper">
+  <canvas id="gameCanvas"></canvas>
+  <div id="hud">Connections: <span id="connection-count">0</span>/10</div>
+  <div id="controls-display">
+    ← → / A D : Move<br>
+    Space / W / ↑ : Jump<br>
+    E : Talk to NPC
+  </div>
+  <div id="dialogue-box">
+    <div id="dialogue-header">
+      <div id="dialogue-portrait"></div>
+      <div>
+        <div id="dialogue-name"></div>
+        <div id="dialogue-source"></div>
+      </div>
+    </div>
+    <div id="dialogue-text"></div>
+    <div id="dialogue-continue">[ Press E or Space to continue ]</div>
+  </div>
+  <div id="win-screen">
+    <h2>✦ ALL CONNECTIONS MADE ✦</h2>
+    <p>You have gathered all 10 perspectives. Together, they weave a single truth:</p>
+    <div class="thesis">
+      "Stories are not just told — they are lived. Through every voice you have heard today,
+      a thread was pulled between the storyteller and the self, revealing that narrative
+      is how humanity makes meaning from chaos."
+    </div>
+    <p>This is your philosophy of story.</p>
+    <button id="restart-btn" onclick="restartGame()">↩ Play Again</button>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+const CANVAS_W = 1100;
+const CANVAS_H = 580;
+const DIALOGUE_H = 160;
+const GRAVITY = 0.55;
+const JUMP_FORCE = -13;
+const PLAYER_SPEED = 4.5;
+const NPC_INTERACT_DIST = 60;
+
+// ─── NPC DATA — 10 sources, each with a character and dialogue ─────────────
+const NPCS_DATA = [
+  {
+    name: "The Storyteller",
+    emoji: "🧙",
+    color: "#c084fc",
+    source: "Source 1 — Joseph Campbell, The Hero with a Thousand Faces",
+    lines: [
+      "Every hero's journey begins with a call. A disruption. A question that won't let you sleep.",
+      "Campbell studied myths from every culture and found the same bones underneath. The same arc. The same transformation.",
+      "Stories don't just entertain — they map the territory of what it means to be human. That's your first connection."
+    ]
+  },
+  {
+    name: "The Dreamer",
+    emoji: "🌙",
+    color: "#67e8f9",
+    source: "Source 2 — Chimamanda Ngozi Adichie, The Danger of a Single Story",
+    lines: [
+      "When I was young, I read only British books. I thought stories were about people who looked nothing like me.",
+      "A single story creates stereotypes. Not because they are untrue, but because they are incomplete.",
+      "The way we tell a story — who tells it, how often, when — determines what we believe is real. Never forget that power."
+    ]
+  },
+  {
+    name: "The Scientist",
+    emoji: "🔬",
+    color: "#86efac",
+    source: "Source 3 — Paul Zak, The Moral Molecule (TED Talk)",
+    lines: [
+      "We ran the experiment. A person listens to a story. Their brain releases oxytocin. They feel connection.",
+      "It's not just metaphor — narrative literally changes brain chemistry. It makes you care about strangers.",
+      "Stories are a technology for empathy. They are how one nervous system reaches into another."
+    ]
+  },
+  {
+    name: "The Poet",
+    emoji: "🖊️",
+    color: "#fda4af",
+    source: "Source 4 — Toni Morrison, The Nobel Prize Lecture, 1993",
+    lines: [
+      "Language can never 'pin down' slavery, genocide, war. But artists keep trying.",
+      "Morrison said: language is life. Oppressive language does more than represent violence — it is violence.",
+      "And yet the opposite is also true. Language that reaches toward truth can be an act of liberation."
+    ]
+  },
+  {
+    name: "The Philosopher",
+    emoji: "🏛️",
+    color: "#fcd34d",
+    source: "Source 5 — Roland Barthes, Introduction to the Structural Analysis of Narratives",
+    lines: [
+      "Narrative is international, transhistorical, transcultural. It is simply there — like life itself.",
+      "Barthes argued that narrative isn't just something humans do. It is something we are.",
+      "We don't just tell stories about experience. We experience the world as story in the first place."
+    ]
+  },
+  {
+    name: "The Anthropologist",
+    emoji: "🗺️",
+    color: "#fb923c",
+    source: "Source 6 — Robin Wall Kimmerer, Braiding Sweetgrass",
+    lines: [
+      "Indigenous storytelling doesn't separate the human from the natural world. The plants are teachers.",
+      "When we lost those stories, we lost our sense of belonging to the land. We became consumers, not relatives.",
+      "To restore relationship with the Earth, we must first restore the stories we tell about it."
+    ]
+  },
+  {
+    name: "The Filmmaker",
+    emoji: "🎬",
+    color: "#a78bfa",
+    source: "Source 7 — Roger Ebert, Why I Believe in the Movies",
+    lines: [
+      "For two hours in the dark, a film can make you inhabit another life. That is a form of travel no passport allows.",
+      "Ebert called movies 'a machine that generates empathy.' We see through another's eyes and are changed.",
+      "Visual stories reach people who won't read a book. They democratize the act of understanding."
+    ]
+  },
+  {
+    name: "The Psychologist",
+    emoji: "🧠",
+    color: "#34d399",
+    source: "Source 8 — Jerome Bruner, Actual Minds, Possible Worlds",
+    lines: [
+      "Bruner identified two modes of thought: logical-scientific, and narrative. We need both.",
+      "Narrative thought is how we make sense of intentions, desires, and moral complexity.",
+      "We don't store memories as facts. We store them as stories — and that shapes everything we believe about ourselves."
+    ]
+  },
+  {
+    name: "The Activist",
+    emoji: "✊",
+    color: "#f87171",
+    source: "Source 9 — Roxane Gay, Bad Feminist",
+    lines: [
+      "We need more stories about women who are complex, flawed, and fully human — not archetypes or afterthoughts.",
+      "When a group of people are absent from stories, society learns to be comfortable with their absence in real life.",
+      "Representation in narrative isn't just about art. It is about dignity. About who gets to be the hero of their own life."
+    ]
+  },
+  {
+    name: "The Guide",
+    emoji: "⭐",
+    color: "#ffe066",
+    source: "Source 10 — Ursula K. Le Guin, The Language of the Night",
+    lines: [
+      "Fantasy is not escapism. It is a way of looking at the real world from a different angle — to see it clearly.",
+      "Le Guin said the artist deals in what cannot be said. That is where the real truth lives.",
+      "You have walked a long road and heard ten voices. Now the connections belong to you. What story will you tell?"
+    ]
+  }
+];
+
+// ─── LEVEL LAYOUT ──────────────────────────────────────────────────────────
+// World is wider than canvas; camera scrolls
+const WORLD_W = 5000;
+const GROUND_Y = CANVAS_H - DIALOGUE_H - 50;
+
+function buildLevel() {
+  // platforms: {x, y, w, h}
+  const platforms = [
+    // Starting ground section
+    { x: 0,    y: GROUND_Y, w: 320, h: 20 },
+    // floating platforms with gaps
+    { x: 370,  y: GROUND_Y - 80,  w: 140, h: 18 },
+    { x: 560,  y: GROUND_Y - 40,  w: 160, h: 18 },
+    { x: 780,  y: GROUND_Y - 110, w: 130, h: 18 },
+    { x: 960,  y: GROUND_Y - 60,  w: 180, h: 18 },
+    { x: 1190, y: GROUND_Y - 130, w: 140, h: 18 },
+    { x: 1380, y: GROUND_Y - 50,  w: 200, h: 18 },
+    { x: 1630, y: GROUND_Y - 140, w: 130, h: 18 },
+    { x: 1810, y: GROUND_Y - 70,  w: 150, h: 18 },
+    { x: 2010, y: GROUND_Y - 160, w: 120, h: 18 },
+    { x: 2180, y: GROUND_Y - 80,  w: 180, h: 18 },
+    { x: 2410, y: GROUND_Y - 130, w: 140, h: 18 },
+    { x: 2600, y: GROUND_Y - 50,  w: 160, h: 18 },
+    { x: 2810, y: GROUND_Y - 170, w: 130, h: 18 },
+    { x: 3000, y: GROUND_Y - 90,  w: 200, h: 18 },
+    { x: 3250, y: GROUND_Y - 140, w: 140, h: 18 },
+    { x: 3440, y: GROUND_Y - 60,  w: 180, h: 18 },
+    { x: 3680, y: GROUND_Y - 170, w: 120, h: 18 },
+    { x: 3850, y: GROUND_Y - 80,  w: 200, h: 18 },
+    { x: 4100, y: GROUND_Y - 130, w: 150, h: 18 },
+    { x: 4310, y: GROUND_Y - 60,  w: 180, h: 18 },
+    // final island
+    { x: 4550, y: GROUND_Y - 30,  w: 450, h: 20 },
+  ];
+
+  // Place NPCs on platforms (one per "zone")
+  const npcPlatforms = [0, 1, 3, 5, 7, 9, 11, 13, 15, 21];
+  const npcs = NPCS_DATA.map((data, i) => {
+    const plat = platforms[npcPlatforms[i]];
+    return {
+      ...data,
+      x: plat.x + plat.w / 2,
+      y: plat.y - 44,
+      talked: false,
+      dialoguePage: 0,
+      platIndex: npcPlatforms[i]
+    };
+  });
+
+  return { platforms, npcs };
+}
+
+// ─── GAME STATE ────────────────────────────────────────────────────────────
+let canvas, ctx, level, player, camera, keys, dialogueState, connections, animFrame;
+
+function startGame() {
+  document.getElementById('title-screen').style.display = 'none';
+  const wrapper = document.getElementById('game-wrapper');
+  wrapper.style.display = 'block';
+
+  canvas = document.getElementById('gameCanvas');
+  canvas.width = CANVAS_W;
+  canvas.height = CANVAS_H;
+  ctx = canvas.getContext('2d');
+
+  initGame();
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
+  gameLoop();
+}
+
+function initGame() {
+  level = buildLevel();
+  const startPlat = level.platforms[0];
+  player = {
+    x: startPlat.x + 60,
+    y: startPlat.y - 48,
+    w: 28,
+    h: 42,
+    vx: 0,
+    vy: 0,
+    onGround: false,
+    facingRight: true,
+    walkFrame: 0,
+    walkTimer: 0,
+  };
+  camera = { x: 0 };
+  keys = {};
+  dialogueState = { active: false, npcIndex: -1, page: 0 };
+  connections = 0;
+  document.getElementById('connection-count').textContent = '0';
+  document.getElementById('dialogue-box').style.display = 'none';
+  document.getElementById('win-screen').style.display = 'none';
+}
+
+function restartGame() {
+  document.getElementById('win-screen').style.display = 'none';
+  initGame();
+}
+
+// ─── INPUT ─────────────────────────────────────────────────────────────────
+function onKeyDown(e) {
+  keys[e.code] = true;
+
+  if (dialogueState.active) {
+    if (e.code === 'KeyE' || e.code === 'Space') {
+      e.preventDefault();
+      advanceDialogue();
+    }
+    return;
+  }
+
+  if (e.code === 'KeyE') {
+    tryTalkToNPC();
+  }
+  if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (player.onGround) {
+      player.vy = JUMP_FORCE;
+      player.onGround = false;
+    }
+  }
+}
+
+function onKeyUp(e) {
+  keys[e.code] = false;
+}
+
+// ─── DIALOGUE ──────────────────────────────────────────────────────────────
+function tryTalkToNPC() {
+  for (let i = 0; i < level.npcs.length; i++) {
+    const npc = level.npcs[i];
+    const dx = Math.abs((player.x + player.w / 2) - npc.x);
+    const dy = Math.abs((player.y + player.h / 2) - npc.y);
+    if (dx < NPC_INTERACT_DIST && dy < 80) {
+      openDialogue(i);
+      return;
+    }
+  }
+}
+
+function openDialogue(npcIndex) {
+  dialogueState.active = true;
+  dialogueState.npcIndex = npcIndex;
+  dialogueState.page = 0;
+  renderDialoguePage();
+  document.getElementById('dialogue-box').style.display = 'block';
+}
+
+function renderDialoguePage() {
+  const npc = level.npcs[dialogueState.npcIndex];
+  const page = dialogueState.page;
+  document.getElementById('dialogue-portrait').textContent = npc.emoji;
+  document.getElementById('dialogue-name').textContent = npc.name;
+  document.getElementById('dialogue-name').style.color = npc.color;
+  document.getElementById('dialogue-source').textContent = npc.source;
+  document.getElementById('dialogue-text').textContent = npc.lines[page];
+}
+
+function advanceDialogue() {
+  const npc = level.npcs[dialogueState.npcIndex];
+  dialogueState.page++;
+  if (dialogueState.page >= npc.lines.length) {
+    closeDialogue();
+    return;
+  }
+  renderDialoguePage();
+}
+
+function closeDialogue() {
+  const npc = level.npcs[dialogueState.npcIndex];
+  if (!npc.talked) {
+    npc.talked = true;
+    connections++;
+    document.getElementById('connection-count').textContent = connections;
+    if (connections === 10) {
+      setTimeout(showWinScreen, 400);
+    }
+  }
+  dialogueState.active = false;
+  document.getElementById('dialogue-box').style.display = 'none';
+}
+
+function showWinScreen() {
+  document.getElementById('win-screen').style.display = 'flex';
+}
+
+// ─── PHYSICS & COLLISION ───────────────────────────────────────────────────
+function updatePlayer(dt) {
+  if (dialogueState.active) return;
+
+  const movingLeft  = keys['ArrowLeft']  || keys['KeyA'];
+  const movingRight = keys['ArrowRight'] || keys['KeyD'];
+  const jumping     = keys['Space'] || keys['KeyW'] || keys['ArrowUp'];
+
+  if (movingLeft)  { player.vx = -PLAYER_SPEED; player.facingRight = false; }
+  else if (movingRight) { player.vx = PLAYER_SPEED; player.facingRight = true; }
+  else player.vx = 0;
+
+  if (jumping && player.onGround) {
+    player.vy = JUMP_FORCE;
+    player.onGround = false;
+  }
+
+  player.vy += GRAVITY;
+  player.x += player.vx;
+  player.y += player.vy;
+
+  // animate walk
+  if (player.vx !== 0) {
+    player.walkTimer++;
+    if (player.walkTimer > 8) { player.walkTimer = 0; player.walkFrame = (player.walkFrame + 1) % 4; }
+  } else { player.walkFrame = 0; }
+
+  player.onGround = false;
+  for (const plat of level.platforms) {
+    if (
+      player.x + player.w > plat.x &&
+      player.x < plat.x + plat.w &&
+      player.y + player.h > plat.y &&
+      player.y + player.h < plat.y + plat.h + 15 &&
+      player.vy >= 0
+    ) {
+      player.y = plat.y - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    }
+  }
+
+  // world bounds
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.w > WORLD_W) player.x = WORLD_W - player.w;
+
+  // fell off world — respawn
+  if (player.y > CANVAS_H + 200) {
+    const startPlat = level.platforms[0];
+    player.x = startPlat.x + 60;
+    player.y = startPlat.y - 48;
+    player.vy = 0;
+  }
+}
+
+function updateCamera() {
+  const targetX = player.x - CANVAS_W / 3;
+  camera.x += (targetX - camera.x) * 0.1;
+  if (camera.x < 0) camera.x = 0;
+  if (camera.x > WORLD_W - CANVAS_W) camera.x = WORLD_W - CANVAS_W;
+}
+
+// ─── RENDERING ─────────────────────────────────────────────────────────────
+function drawBackground() {
+  // Sky gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H - DIALOGUE_H);
+  grad.addColorStop(0, '#0d0d2b');
+  grad.addColorStop(1, '#1a1a4e');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H - DIALOGUE_H);
+
+  // Stars (parallax layer)
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  const starSeed = 42;
+  for (let i = 0; i < 80; i++) {
+    const sx = ((i * 137 + starSeed) % WORLD_W) - camera.x * 0.3;
+    const sy = ((i * 97 + starSeed) % (CANVAS_H - DIALOGUE_H - 60));
+    const size = (i % 3 === 0) ? 2 : 1;
+    ctx.fillRect(((sx % CANVAS_W) + CANVAS_W) % CANVAS_W, sy, size, size);
+  }
+
+  // Background mist layer
+  for (let i = 0; i < 4; i++) {
+    const mx = ((i * 340 - camera.x * 0.15) % CANVAS_W + CANVAS_W) % CANVAS_W;
+    const myVal = 80 + i * 55;
+    const grad2 = ctx.createRadialGradient(mx, myVal, 10, mx, myVal, 160);
+    grad2.addColorStop(0, 'rgba(100, 80, 200, 0.06)');
+    grad2.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad2;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H - DIALOGUE_H);
+  }
+}
+
+function drawPlatforms() {
+  for (const plat of level.platforms) {
+    const px = plat.x - camera.x;
+    if (px + plat.w < 0 || px > CANVAS_W) continue;
+
+    // Platform body
+    const isGround = plat.y === level.platforms[0].y || plat.y === level.platforms[level.platforms.length-1].y;
+    const platGrad = ctx.createLinearGradient(px, plat.y, px, plat.y + plat.h);
+    platGrad.addColorStop(0, isGround ? '#3a5a3a' : '#2a3a6a');
+    platGrad.addColorStop(1, isGround ? '#1a3a1a' : '#111a3a');
+    ctx.fillStyle = platGrad;
+    ctx.beginPath();
+    ctx.roundRect(px, plat.y, plat.w, plat.h, 4);
+    ctx.fill();
+
+    // Top glow edge
+    ctx.strokeStyle = isGround ? 'rgba(100,200,100,0.6)' : 'rgba(100,150,255,0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 4, plat.y + 1);
+    ctx.lineTo(px + plat.w - 4, plat.y + 1);
+    ctx.stroke();
+  }
+}
+
+function drawNPCs(time) {
+  for (const npc of level.npcs) {
+    const nx = npc.x - camera.x;
+    if (nx < -60 || nx > CANVAS_W + 60) continue;
+    const ny = npc.y;
+
+    // Glow ring (pulse if not yet talked to)
+    if (!npc.talked) {
+      const pulse = 0.4 + 0.3 * Math.sin(time * 0.003 + npc.x * 0.01);
+      const glowGrad = ctx.createRadialGradient(nx, ny, 5, nx, ny, 40);
+      glowGrad.addColorStop(0, npc.color + '55');
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = glowGrad;
+      ctx.globalAlpha = pulse;
+      ctx.beginPath();
+      ctx.arc(nx, ny, 40, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      // Completed checkmark glow
+      ctx.fillStyle = 'rgba(100,255,100,0.15)';
+      ctx.beginPath();
+      ctx.arc(nx, ny, 30, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // NPC emoji body
+    ctx.font = '36px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const bobY = ny + Math.sin(time * 0.002 + npc.x * 0.02) * 4;
+    ctx.fillText(npc.emoji, nx, bobY);
+
+    // Name label
+    ctx.font = 'bold 11px Courier New';
+    ctx.fillStyle = npc.talked ? '#66ff88' : npc.color;
+    ctx.fillText(npc.name, nx, bobY + 26);
+
+    // E prompt if near player
+    const dx = Math.abs((player.x + player.w / 2) - npc.x);
+    const dy = Math.abs((player.y + player.h / 2) - npc.y);
+    if (dx < NPC_INTERACT_DIST && dy < 80 && !dialogueState.active && !npc.talked) {
+      ctx.font = 'bold 13px Courier New';
+      ctx.fillStyle = '#ffe066';
+      ctx.fillText('[E] Talk', nx, bobY - 36);
+    }
+
+    // Completed badge
+    if (npc.talked) {
+      ctx.font = '18px serif';
+      ctx.fillText('✓', nx + 20, bobY - 20);
+    }
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawPlayer(time) {
+  const px = player.x - camera.x;
+  const py = player.y;
+  const w = player.w;
+  const h = player.h;
+
+  ctx.save();
+  if (!player.facingRight) {
+    ctx.scale(-1, 1);
+    ctx.translate(-2 * (px + w / 2), 0);
+  }
+
+  // Body
+  ctx.fillStyle = '#4a90e2';
+  ctx.fillRect(px + 4, py + 14, w - 8, h - 22);
+
+  // Head
+  ctx.fillStyle = '#f5c5a3';
+  ctx.beginPath();
+  ctx.arc(px + w / 2, py + 8, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hair
+  ctx.fillStyle = '#4a2800';
+  ctx.fillRect(px + 4, py - 2, w - 8, 8);
+
+  // Eyes
+  ctx.fillStyle = '#222';
+  ctx.fillRect(px + w / 2 - 6, py + 4, 3, 3);
+  ctx.fillRect(px + w / 2 + 2, py + 4, 3, 3);
+
+  // Legs (walk animation)
+  const legOffset = player.onGround ? Math.sin(player.walkFrame * Math.PI / 2) * 5 : 0;
+  ctx.fillStyle = '#2255aa';
+  ctx.fillRect(px + 5, py + h - 10 - legOffset, 7, 10 + legOffset);
+  ctx.fillRect(px + w - 12, py + h - 10 + legOffset, 7, 10 - legOffset);
+
+  // Feet
+  ctx.fillStyle = '#111';
+  ctx.fillRect(px + 3, py + h - 4, 9, 4);
+  ctx.fillRect(px + w - 12, py + h - 4, 9, 4);
+
+  ctx.restore();
+
+  // Jump shadow
+  const shadowAlpha = Math.max(0, 0.35 - (Math.abs(player.vy) * 0.02));
+  ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
+  ctx.beginPath();
+  ctx.ellipse(px + w / 2, py + h + 2, 14, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawHints() {
+  // Connection nodes visual guide at bottom of world (progress dots)
+  const dotAreaY = CANVAS_H - DIALOGUE_H - 14;
+  const startX = CANVAS_W / 2 - (10 * 18) / 2;
+  for (let i = 0; i < 10; i++) {
+    ctx.beginPath();
+    ctx.arc(startX + i * 22, dotAreaY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = i < connections ? '#66ff88' : '#334466';
+    ctx.fill();
+    ctx.strokeStyle = i < connections ? '#44ff66' : '#445';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+// ─── GAME LOOP ─────────────────────────────────────────────────────────────
+let lastTime = 0;
+function gameLoop(time = 0) {
+  const dt = Math.min(time - lastTime, 32);
+  lastTime = time;
+
+  updatePlayer(dt);
+  updateCamera();
+
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  drawBackground();
+  drawPlatforms();
+  drawNPCs(time);
+  drawPlayer(time);
+  drawHints();
+
+  animFrame = requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
